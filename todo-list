@@ -1,0 +1,72 @@
+def display_options():
+    print("Menu Options:")
+    print("1. Add a New Task")
+    print("2. Show All Tasks")
+    print("3. Finish a Task")
+    print("4. Save and Quit")
+
+def add_task(tasks):
+    description = input("Enter task details: ")
+    tasks.append(description)
+    print("Task added.")
+
+def show_tasks(tasks):
+    print("\nYour Tasks:")
+    for index, task in enumerate(tasks, start=1):
+        print(f"{index}. {task}")
+    print(f"\nTotal tasks count: {count_tasks(tasks)}")
+
+def finish_task(tasks):
+    if not tasks:
+        print("No tasks to complete.")
+        return
+
+    show_tasks(tasks)
+    try:
+        task_number = int(input("Enter the task number to finish: ")) - 1
+        if 0 <= task_number < len(tasks):
+            finished_task = tasks.pop(task_number)
+            print(f"Task '{finished_task}' marked as complete and removed.")
+        else:
+            print("Invalid number. Try again.")
+    except ValueError:
+        print("Invalid input. Please enter a number.")
+
+def save_tasks(tasks):
+    with open("tasks.txt", "w") as file:
+        for task in tasks:
+            file.write(task + '\n')
+
+def load_tasks():
+    try:
+        with open("tasks.txt", "r") as file:
+            return file.read().splitlines()
+    except FileNotFoundError:
+        return []
+
+def count_tasks(tasks):
+    return len(tasks)
+
+def main():
+    tasks = load_tasks()
+
+    while True:
+        display_options()
+
+        option = input("Select an option: ")
+
+        if option == '1':
+            add_task(tasks)
+        elif option == '2':
+            show_tasks(tasks)
+        elif option == '3':
+            finish_task(tasks)
+        elif option == '4':
+            print("Saving tasks and exiting program.")
+            save_tasks(tasks)
+            break
+        else:
+            print("Invalid selection. Please choose a correct number.")
+
+if __name__ == "__main__":
+    main()
