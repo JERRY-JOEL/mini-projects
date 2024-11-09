@@ -1,72 +1,99 @@
-def display_options():
-    print("Menu Options:")
+from datetime import datetime
+
+def display_menu():
+    print("\nWhat would you like to do?")
     print("1. Add a New Task")
-    print("2. Show All Tasks")
-    print("3. Finish a Task")
-    print("4. Save and Quit")
+    print("2. View All Tasks")
+    print("3. Mark a Task as Complete")
+    print("4. Save and Exit")
 
 def add_task(tasks):
-    description = input("Enter task details: ")
-    tasks.append(description)
-    print("Task added.")
-
-def show_tasks(tasks):
-    print("\nYour Tasks:")
-    for index, task in enumerate(tasks, start=1):
-        print(f"{index}. {task}")
-    print(f"\nTotal tasks count: {count_tasks(tasks)}")
-
-def finish_task(tasks):
-    if not tasks:
-        print("No tasks to complete.")
+    description = input("Enter the task description: ").strip()
+    if not description:
+        print("Task description cannot be empty. Task not added.")
         return
 
-    show_tasks(tasks)
+    due_date_input = input("Enter due date (YYYY-MM-DD) or press Enter for no due date: ").strip()
+    if due_date_input:
+        try:
+            due_date = datetime.strptime(due_date_input, "%Y-%m-%d").date()
+        except ValueError:
+            print("Invalid date format. Please enter the date in YYYY-MM-DD format.")
+            return
+    else:
+        due_date = None
+
+    tasks.append({"description": description, "due_date": due_date})
+    print(f"Task '{description}' added successfully!")
+
+def view_tasks(tasks):
+    if not tasks:
+        print("No tasks available. Add some tasks first!")
+        return
+
+    tasks.sort(key=lambda task: (task["due_date"] is None, task["due_date"]))
+    print("\nHere are your tasks:")
+
+    for i, task in enumerate(tasks, start=1):
+        due_date = task["due_date"].strftime("%Y-%m-%d") if task["due_date"] else "No due date"
+        print(f"{i}. {task['description']} - Due: {due_date}")
+
+    print(f"\nTotal tasks: {len(tasks)}")
+
+def complete_task(tasks):
+    if not tasks:
+        print("No tasks available to complete.")
+        return
+
+    view_tasks(tasks)
     try:
-        task_number = int(input("Enter the task number to finish: ")) - 1
+        task_number = int(input("Enter the task number to mark as complete: ")) - 1
         if 0 <= task_number < len(tasks):
-            finished_task = tasks.pop(task_number)
-            print(f"Task '{finished_task}' marked as complete and removed.")
+            completed_task = tasks.pop(task_number)
+            print(f"Task '{completed_task['description']}' marked as complete.")
         else:
-            print("Invalid number. Try again.")
+            print("Invalid number. Please choose a valid task number.")
     except ValueError:
         print("Invalid input. Please enter a number.")
 
 def save_tasks(tasks):
     with open("tasks.txt", "w") as file:
         for task in tasks:
-            file.write(task + '\n')
+            due_date = task["due_date"].strftime("%Y-%m-%d") if task["due_date"] else ""
+            file.write(f"{task['description']}|{due_date}\n")
+    print("All tasks saved successfully.")
 
 def load_tasks():
+    tasks = []
     try:
         with open("tasks.txt", "r") as file:
-            return file.read().splitlines()
+            for line in file:
+                description, due_date = line.strip().split("|")
+                due_date = datetime.strptime(due_date, "%Y-%m-%d").date() if due_date else None
+                tasks.append({"description": description, "due_date": due_date})
     except FileNotFoundError:
-        return []
-
-def count_tasks(tasks):
-    return len(tasks)
+        print("No saved tasks found. Starting with an empty to-do list.")
+    return tasks
 
 def main():
     tasks = load_tasks()
 
     while True:
-        display_options()
+        display_menu()
+        choice = input("Select an option (1-4): ").strip()
 
-        option = input("Select an option: ")
-
-        if option == '1':
+        if choice == '1':
             add_task(tasks)
-        elif option == '2':
-            show_tasks(tasks)
-        elif option == '3':
-            finish_task(tasks)
-        elif option == '4':
-            print("Saving tasks and exiting program.")
+        elif choice == '2':
+            view_tasks(tasks)
+        elif choice == '3':
+            complete_task(tasks)
+        elif choice == '4':
             save_tasks(tasks)
+            print("Goodbye!")
             break
         else:
-            print("Invalid selection. Please choose a correct number.")
+            print("Invalid choice. Please enter a number between 1 and 4.")
 
 if __name__ == "__main__":
     main()
